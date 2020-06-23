@@ -4,7 +4,15 @@ defmodule Channel do
   end
 
   def write(channel, val) do
-    send(channel, {:write, val})
+    send(channel, {:write, val, self()})
+
+    receive do
+      {:writed, _channel, val} -> val
+    end
+  end
+
+  def pub(channel, val) do
+    send(channel, {:write, val, self()})
   end
 
   def read(channel) do
@@ -17,10 +25,19 @@ defmodule Channel do
 
   def loop do
     receive do
-      {:read, caller} ->
+      {:read, read_caller} ->
         receive do
-          {:write, val} ->
-            send(caller, {:read, self(), val})
+          {:write, val, write_caller} ->
+            send(read_caller, {:read, self(), val})
+            send(write_caller, {:writed, self(), val})
+            loop()
+        end
+
+      {:write, val, write_caller} ->
+        receive do
+          {:read, read_caller} ->
+            send(read_caller, {:read, self(), val})
+            send(write_caller, {:writed, self(), val})
             loop()
         end
     end

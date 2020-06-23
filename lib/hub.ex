@@ -1,51 +1,66 @@
 defmodule Hub do
-  import Plug.Conn
+  use Plug.Router
+  plug(:match)
+  plug(:dispatch)
+
+  match "/" do
+    send_resp(conn, 200, "Send channel id")
+  end
+
+  get "/:channel_id" do
+    get_data(conn, channel_id)
+  end
+
+  get "/pubsub/:channel_id" do
+    get_data(conn, channel_id)
+  end
+
+  match "/:channel_id", via: [:post, :patch, :put] do
+    post_data(conn, channel_id)
+  end
+
+  match "/pubsub/:channel_id", via: [:post, :patch, :put] do
+    pub_data(conn, channel_id)
+  end
+
+  defp get_data(conn, channel_id) do
+    store = Process.whereis(:store)
+
+    data =
+      case Store.pop(store, channel_id) do
+        nil -> Store.put(store, channel_id, Channel.make()) |> Channel.read()
+        channel -> Channel.read(channel)
+      end
+
+    send_resp(conn, 200, data)
+  end
 
   def init(options) do
     # initialize options
     options
   end
 
-  def call(conn, _opts) do
-    case conn.request_path do
-      "/" -> response(conn, 200, "Send UUID")
-      "/" <> uuid -> validate_uuid(uuid, conn)
-    end
-  end
-
-  defp validate_uuid(uuid, conn) do
-
-    case UUID.info(uuid) do
-      {:ok, _} -> process_request(conn, uuid)
-      {:error, reason} -> response(conn, 400, reason)
-    end
-  end
-
-  defp response(conn, code, data) do
-    conn |> put_resp_content_type("text/plain") |> send_resp(code, data)
-  end
-
-  defp process_request(conn = %Plug.Conn{method: "GET"}, uuid) do
-    store = Process.whereis(:store)
-
-    data =
-      case Store.get(store, uuid) do
-        nil -> Store.put(store, uuid, Channel.make()) |> Channel.read()
-        channel -> Channel.read(channel)
-      end
-
-    response(conn, 200, data)
-  end
-
-  defp process_request(conn = %Plug.Conn{method: "POST"}, uuid) do
+  defp post_data(conn, channel_id) do
     store = Process.whereis(:store)
     {:ok, data, conn} = read_body(conn)
 
-    case Store.get(store, uuid) do
-      nil -> Store.put(store, uuid, Channel.make()) |> Channel.write(data)
+    case Store.pop(store, channel_id) do
+      nil -> Store.put(store, channel_id, Channel.make()) |> Channel.write(data)
       channel -> Channel.write(channel, data)
     end
 
-    response(conn, 200, uuid)
+    send_resp(conn, 200, channel_id)
+  end
+
+  defp pub_data(conn, channel_id) do
+    store = Process.whereis(:store)
+    {:ok, data, conn} = read_body(conn)
+
+    case Store.pop(store, channel_id) do
+      nil -> Store.put(store, channel_id, Channel.make()) |> Channel.pub(data)
+      channel -> Channel.pub(channel, data)
+    end
+
+    send_resp(conn, 200, channel_id)
   end
 end
