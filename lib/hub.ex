@@ -1,5 +1,6 @@
 defmodule Hub do
   use Plug.Router
+  plug Plug.Logger
   plug(:match)
   plug(:dispatch)
 
