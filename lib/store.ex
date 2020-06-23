@@ -1,0 +1,16 @@
+defmodule Store do
+  use Agent
+
+  def start_link(_opts) do
+    Agent.start_link(fn -> %{} end, name: :store)
+  end
+
+  def get(store, key) do
+    Agent.get(store, &Map.get(&1, key))
+  end
+
+  def put(store, key, value) do
+    :ok = Agent.update(store, &Map.put(&1, key, value))
+    value
+  end
+end
