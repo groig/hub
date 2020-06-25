@@ -5,6 +5,10 @@ defmodule Store do
     Agent.start_link(fn -> %{} end, name: :store)
   end
 
+  def get(store, key) do
+    Agent.get(store, &Map.get(&1, key))
+  end
+
   def pop(store, key) do
     Agent.get_and_update(store, &Map.pop(&1, key))
   end

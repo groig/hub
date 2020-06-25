@@ -1,6 +1,6 @@
 defmodule Hub do
   use Plug.Router
-  plug Plug.Logger
+  plug(Plug.Logger)
   plug(:match)
   plug(:dispatch)
 
@@ -24,11 +24,19 @@ defmodule Hub do
     pub_data(conn, channel_id)
   end
 
+  delete "/:channel_id" do
+    delete_channel(conn, channel_id)
+  end
+
+  delete "/pubsub/:channel_id" do
+    delete_channel(conn, channel_id)
+  end
+
   defp get_data(conn, channel_id) do
     store = Process.whereis(:store)
 
     data =
-      case Store.pop(store, channel_id) do
+      case Store.get(store, channel_id) do
         nil -> Store.put(store, channel_id, Channel.make()) |> Channel.read()
         channel -> Channel.read(channel)
       end
@@ -45,7 +53,7 @@ defmodule Hub do
     store = Process.whereis(:store)
     {:ok, data, conn} = read_body(conn)
 
-    case Store.pop(store, channel_id) do
+    case Store.get(store, channel_id) do
       nil -> Store.put(store, channel_id, Channel.make()) |> Channel.write(data)
       channel -> Channel.write(channel, data)
     end
@@ -57,11 +65,20 @@ defmodule Hub do
     store = Process.whereis(:store)
     {:ok, data, conn} = read_body(conn)
 
-    case Store.pop(store, channel_id) do
+    case Store.get(store, channel_id) do
       nil -> Store.put(store, channel_id, Channel.make()) |> Channel.pub(data)
       channel -> Channel.pub(channel, data)
     end
 
-    send_resp(conn, 200, channel_id)
+    send_resp(conn, 201, channel_id)
+  end
+
+  defp delete_channel(conn, channel_id) do
+    store = Process.whereis(:store)
+
+    case Store.pop(store, channel_id) do
+      nil -> send_resp(conn, 404, "channel not found")
+      _channel -> send_resp(conn, 200, channel_id <> "deleted")
+    end
   end
 end
