@@ -1,6 +1,6 @@
 defmodule Channel do
   def make do
-    spawn(fn -> Channel.loop([]) end)
+    spawn(&Channel.loop/0)
   end
 
   def write(channel, val) do
@@ -19,26 +19,14 @@ defmodule Channel do
     end
   end
 
-  def pub(channel, val) do
-    send(channel, {:pub, val})
-  end
-
-  def sub(channel) do
-    send(channel, {:sub, self()})
-
-    receive do
-      {:pub, _channel, val} -> val
-    end
-  end
-
-  def loop(subs) do
+  def loop() do
     receive do
       {:read, read_caller} ->
         receive do
           {:write, val, write_caller} ->
             send(read_caller, {:read, self(), val})
             send(write_caller, {:written, self(), val})
-            loop(subs)
+            loop()
         end
 
       {:write, val, write_caller} ->
@@ -46,16 +34,8 @@ defmodule Channel do
           {:read, read_caller} ->
             send(read_caller, {:read, self(), val})
             send(write_caller, {:written, self(), val})
-            loop(subs)
+            loop()
         end
-
-      {:sub, sub_caller} ->
-        loop(subs ++ [sub_caller])
-
-      {:pub, val} ->
-        subs |> Enum.each(fn sub -> Task.start(fn -> send(sub, {:pub, self(), val}) end) end)
-
-        loop([])
     end
   end
 end
