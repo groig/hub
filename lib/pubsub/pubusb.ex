@@ -11,7 +11,7 @@ defmodule PubSubChannel do
     send(channel, {:sub, self()})
 
     receive do
-      {:pub, _channel, val} -> val
+      {:pub, val} -> val
     end
   end
 
@@ -21,7 +21,7 @@ defmodule PubSubChannel do
         loop(subs ++ [sub_caller])
 
       {:pub, val} ->
-        subs |> Enum.each(fn sub -> Task.start(fn -> send(sub, {:pub, self(), val}) end) end)
+        subs |> Enum.each(fn sub -> Task.start(fn -> send(sub, {:pub, val}) end) end)
 
         loop([])
     end
