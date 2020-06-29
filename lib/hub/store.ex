@@ -1,4 +1,4 @@
-defmodule Store do
+defmodule Hub.Store do
   use Agent
 
   def start_link(opts) do

@@ -1,4 +1,5 @@
 defmodule Hub do
+  alias Hub.Store
   use Plug.Router
   plug(Plug.Logger)
   plug(:match)

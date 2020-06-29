@@ -10,8 +10,8 @@ defmodule Hub.Application do
       # Starts a worker by calling: Hub.Worker.start_link(arg)
       # {Hub.Worker, arg}
       {Plug.Cowboy, scheme: :http, plug: Hub, options: [port: 4000]},
-      Supervisor.child_spec({Store, name: :store}, id: :store),
-      Supervisor.child_spec({Store, name: :pubsubstore}, id: :pubsubstore)
+      Supervisor.child_spec({Hub.Store, name: :store}, id: :store),
+      Supervisor.child_spec({Hub.Store, name: :pubsubstore}, id: :pubsubstore)
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
