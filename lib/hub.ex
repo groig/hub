@@ -70,8 +70,8 @@ defmodule Hub do
     store = Process.whereis(:store)
 
     case Store.pop(store, channel_id) do
-      nil -> send_resp(conn, 404, "channel not found")
-      _channel -> send_resp(conn, 200, channel_id <> "deleted")
+      nil -> send_resp(conn, 404, "Channel not found")
+      _channel -> send_resp(conn, 200, channel_id <> " deleted")
     end
   end
 
@@ -103,8 +103,8 @@ defmodule Hub do
     store = Process.whereis(:pubsubstore)
 
     case Store.pop(store, channel_id) do
-      nil -> send_resp(conn, 404, "channel not found")
-      _channel -> send_resp(conn, 200, channel_id <> "deleted")
+      nil -> send_resp(conn, 404, "Channel not found")
+      _channel -> send_resp(conn, 200, channel_id <> " deleted")
     end
   end
 end
