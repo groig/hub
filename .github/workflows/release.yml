@@ -27,7 +27,7 @@ jobs:
       - name: Create code release
         run: MIX_ENV=prod mix release --path hub-${{ steps.get_version.outputs.VERSION }}
       - name: Compress release
-        run: zip -r hub-${{ steps.get_version.outputs.VERSION }}.zip hub-${{ steps.get_version.outputs.VERSION }}
+        run: zip -r9 hub-${{ steps.get_version.outputs.VERSION }}.zip hub-${{ steps.get_version.outputs.VERSION }}
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
