@@ -17,7 +17,6 @@ defmodule PubSubTest do
   end
 
   test "PubSubChannel.sub/1 subscribes to a channel and waits for a message" do
-    msg = "a message"
     pubsub = PubSubChannel.make()
     :erlang.trace(pubsub, true, [:receive])
     sub = spawn(fn -> PubSubChannel.sub(pubsub) end)
@@ -58,7 +57,7 @@ defmodule PubSubTest do
     pubsub = PubSubChannel.make()
 
     tasks =
-      Enum.map(msgs, fn msg ->
+      Enum.map(msgs, fn _ ->
         Task.async(fn ->
           PubSubChannel.sub(pubsub)
         end)
