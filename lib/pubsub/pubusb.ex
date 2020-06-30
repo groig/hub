@@ -21,7 +21,7 @@ defmodule PubSubChannel do
         loop(subs ++ [sub_caller])
 
       {:pub, val} ->
-        subs |> Enum.each(fn sub -> Task.start(fn -> send(sub, {:pub, val}) end) end)
+        subs |> Enum.each(fn sub -> send(sub, {:pub, val}) end)
 
         loop([])
     end
