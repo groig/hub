@@ -1,4 +1,4 @@
-![Elixir CI](https://github.com/groig/hub/workflows/Elixir%20CI/badge.svg)
+![Testing](https://github.com/groig/hub/workflows/Testing/badge.svg)
 
 # Hub
 
