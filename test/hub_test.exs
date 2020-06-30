@@ -26,8 +26,9 @@ defmodule HubTest do
   end
 
   test "read and write a value" do
-    conn_get = conn(:get, "/channel-id")
-    conn_post = conn(:post, "/channel-id", "message")
+    channel_id = UUID.uuid4()
+    conn_get = conn(:get, "/" <> channel_id)
+    conn_post = conn(:post, "/" <> channel_id, "message")
 
     task = Task.async(fn -> Hub.call(conn_get, @opts) end)
 
@@ -44,8 +45,9 @@ defmodule HubTest do
   end
 
   test "write and read a value" do
-    conn_get = conn(:get, "/channel-id")
-    conn_post = conn(:post, "/channel-id", "message")
+    channel_id = UUID.uuid4()
+    conn_get = conn(:get, "/" <> channel_id)
+    conn_post = conn(:post, "/" <> channel_id, "message")
 
     task = Task.async(fn -> Hub.call(conn_post, @opts) end)
 
@@ -58,12 +60,13 @@ defmodule HubTest do
 
     assert conn_post.state == :sent
     assert conn_post.status == 200
-    assert conn_post.resp_body == "channel-id"
+    assert conn_post.resp_body == channel_id
   end
 
   test "pub and sub a value" do
-    conn_sub = conn(:get, "/pubsub/channel-id")
-    conn_pub = conn(:post, "/pubsub/channel-id", "message")
+    channel_id = UUID.uuid4()
+    conn_sub = conn(:get, "/pubsub/" <> channel_id)
+    conn_pub = conn(:post, "/pubsub/" <> channel_id, "message")
 
     task = Task.async(fn -> Hub.call(conn_sub, @opts) end)
 
@@ -79,22 +82,23 @@ defmodule HubTest do
     assert conn_sub.resp_body == "message"
   end
 
-
   test "delete a pubsub channel" do
-    conn = conn(:delete, "/pubsub/to-delete-channel-id")
+    channel_id = UUID.uuid4()
+    conn = conn(:delete, "/pubsub/" <> channel_id)
     store = Process.whereis(:pubsubstore)
-    Store.put(store, "to-delete-channel-id", "message")
+    Store.put(store, channel_id, "message")
 
     conn = Hub.call(conn, @opts)
 
     assert conn.state == :sent
     assert conn.status == 200
-    assert conn.resp_body == "to-delete-channel-id deleted"
-    assert Store.get(store, "to-delete-channel-id") == nil
+    assert conn.resp_body == channel_id <> " deleted"
+    assert Store.get(store, channel_id) == nil
   end
 
   test "delete a non existent pubsub channel" do
-    conn = conn(:delete, "/pubsub/channel-does-not-exist")
+    channel_id = UUID.uuid4()
+    conn = conn(:delete, "/pubsub/" <> channel_id)
 
     conn = Hub.call(conn, @opts)
 

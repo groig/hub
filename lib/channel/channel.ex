@@ -1,4 +1,5 @@
 defmodule Channel do
+  use GenServer
   def make do
     spawn(&Channel.loop/0)
   end
