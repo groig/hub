@@ -9,14 +9,14 @@ defmodule ChannelTest do
     task1 = Task.async(fn -> ProduceConsume.consume(channel_id) end)
 
     Task.start(fn ->
-      :timer.sleep(10)
+      :timer.sleep(50)
       ProduceConsume.produce(channel_id, msg)
     end)
 
     assert msg == Task.await(task)
 
     Task.start(fn ->
-      :timer.sleep(10)
+      :timer.sleep(50)
       ProduceConsume.produce(channel_id, msg)
     end)
 
@@ -30,14 +30,14 @@ defmodule ChannelTest do
     task1 = Task.async(fn -> ProduceConsume.produce(channel_id, msg) end)
 
     Task.start(fn ->
-      :timer.sleep(10)
+      :timer.sleep(50)
       ProduceConsume.consume(channel_id)
     end)
 
     assert msg == Task.await(task)
 
     Task.start(fn ->
-      :timer.sleep(10)
+      :timer.sleep(50)
       ProduceConsume.consume(channel_id)
     end)
 

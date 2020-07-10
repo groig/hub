@@ -23,7 +23,7 @@ defmodule HubTest do
     task = Task.async(fn -> Hub.call(conn_get, @opts) end)
 
     Task.start(fn ->
-      :timer.sleep(10)
+      :timer.sleep(50)
       Hub.call(conn_post, @opts)
     end)
 

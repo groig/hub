@@ -14,7 +14,7 @@ defmodule PubSubTest do
     sub = Task.async(fn -> PubSub.subscribe(channel_id) end)
 
     Task.start(fn ->
-      :timer.sleep(10)
+      :timer.sleep(50)
       PubSub.publish(channel_id, msg)
     end)
 
@@ -33,7 +33,7 @@ defmodule PubSubTest do
       end)
 
     Task.start(fn ->
-      :timer.sleep(10)
+      :timer.sleep(50)
       PubSub.publish(channel_id, msg)
     end)
 
