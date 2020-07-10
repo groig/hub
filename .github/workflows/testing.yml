@@ -1,8 +1,12 @@
 name: Testing
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
   build:
@@ -14,7 +18,7 @@ jobs:
       - name: Set up Elixir
         uses: actions/setup-elixir@v1
         with:
-          elixir-version: '1.10.3'
+          elixir-version: '1.10.4'
           otp-version: '22.3'
       - name: Install Dependencies
         run: mix deps.get
