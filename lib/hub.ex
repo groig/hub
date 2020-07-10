@@ -1,6 +1,6 @@
 defmodule Hub do
-  alias Hub.Store
   use Plug.Router
+  alias Channel.{PubSub, ProduceConsume, Store}
   plug(Plug.Logger)
   plug(:match)
   plug(:dispatch)
@@ -12,11 +12,11 @@ defmodule Hub do
   # Default
 
   get "/:channel_id" do
-    get_data(conn, channel_id)
+    consume(conn, channel_id)
   end
 
   match "/:channel_id", via: [:post, :patch, :put] do
-    post_data(conn, channel_id)
+    produce(conn, channel_id)
   end
 
   delete "/:channel_id" do
@@ -26,85 +26,50 @@ defmodule Hub do
   # PubSub
 
   get "/pubsub/:channel_id" do
-    sub_data(conn, channel_id)
+    subscribe(conn, channel_id)
   end
 
   match "/pubsub/:channel_id", via: [:post, :patch, :put] do
-    pub_data(conn, channel_id)
+    publish(conn, channel_id)
   end
 
   delete "/pubsub/:channel_id" do
     delete_pubsubchannel(conn, channel_id)
   end
 
-  def init(options) do
-    # initialize options
-    options
-  end
-
-  defp post_data(conn, channel_id) do
-    store = Process.whereis(:store)
+  defp produce(conn, channel_id) do
     {:ok, data, conn} = read_body(conn)
-
-    case Store.get(store, channel_id) do
-      nil -> Store.put(store, channel_id, Channel.make()) |> Channel.write(data)
-      channel -> Channel.write(channel, data)
-    end
-
+    ^data = ProduceConsume.produce(channel_id, data)
     send_resp(conn, 200, channel_id)
   end
 
-  defp get_data(conn, channel_id) do
-    store = Process.whereis(:store)
-
-    data =
-      case Store.get(store, channel_id) do
-        nil -> Store.put(store, channel_id, Channel.make()) |> Channel.read()
-        channel -> Channel.read(channel)
-      end
-
+  defp consume(conn, channel_id) do
+    data = ProduceConsume.consume(channel_id)
     send_resp(conn, 200, data)
   end
 
   defp delete_channel(conn, channel_id) do
-    store = Process.whereis(:store)
-
-    case Store.pop(store, channel_id) do
-      nil -> send_resp(conn, 404, "Channel not found")
-      _channel -> send_resp(conn, 200, channel_id <> " deleted")
+    case Store.delete(channel_id, :prodconchannels) do
+      :not_found -> send_resp(conn, 404, "Channel not found")
+      :ok -> send_resp(conn, 200, channel_id <> " deleted")
     end
   end
 
-  defp pub_data(conn, channel_id) do
-    store = Process.whereis(:pubsubstore)
+  defp publish(conn, channel_id) do
     {:ok, data, conn} = read_body(conn)
-
-    case Store.get(store, channel_id) do
-      nil -> Store.put(store, channel_id, PubSubChannel.make()) |> PubSubChannel.pub(data)
-      channel -> PubSubChannel.pub(channel, data)
-    end
-
+    :ok = PubSub.publish(channel_id, data)
     send_resp(conn, 201, channel_id)
   end
 
-  defp sub_data(conn, channel_id) do
-    store = Process.whereis(:pubsubstore)
-
-    data =
-      case Store.get(store, channel_id) do
-        nil -> Store.put(store, channel_id, PubSubChannel.make()) |> PubSubChannel.sub()
-        channel -> PubSubChannel.sub(channel)
-      end
-
+  defp subscribe(conn, channel_id) do
+    data = PubSub.subscribe(channel_id)
     send_resp(conn, 200, data)
   end
 
   defp delete_pubsubchannel(conn, channel_id) do
-    store = Process.whereis(:pubsubstore)
-
-    case Store.pop(store, channel_id) do
-      nil -> send_resp(conn, 404, "Channel not found")
-      _channel -> send_resp(conn, 200, channel_id <> " deleted")
+    case Store.delete(channel_id, :pubsubchannels) do
+      :not_found -> send_resp(conn, 404, "Channel not found")
+      :ok -> send_resp(conn, 200, channel_id <> " deleted")
     end
   end
 end

@@ -1,10 +1,9 @@
-defmodule Channel do
-  use GenServer
-  def make do
-    spawn(&Channel.loop/0)
-  end
+defmodule Channel.ProduceConsume do
+  alias Channel.Store
+  @table :prodconchannels
 
-  def write(channel, val) do
+  def produce(channel_id, val) do
+    channel = Store.get_channel(__MODULE__, channel_id, @table)
     send(channel, {:write, val, self()})
 
     receive do
@@ -12,12 +11,17 @@ defmodule Channel do
     end
   end
 
-  def read(channel) do
+  def consume(channel_id) do
+    channel = Store.get_channel(__MODULE__, channel_id, @table)
     send(channel, {:read, self()})
 
     receive do
       {:read, _channel, val} -> val
     end
+  end
+
+  def make do
+    spawn(&Channel.ProduceConsume.loop/0)
   end
 
   def loop() do
