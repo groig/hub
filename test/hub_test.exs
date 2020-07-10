@@ -1,7 +1,7 @@
 defmodule HubTest do
   use ExUnit.Case, async: true
   use Plug.Test
-  alias Hub.Store
+  alias Channel.{Store, ProduceConsume, PubSub}
 
   @opts Hub.init([])
 
@@ -13,16 +13,6 @@ defmodule HubTest do
     assert conn.state == :sent
     assert conn.status == 200
     assert conn.resp_body == "Send channel id"
-  end
-
-  test "delete a non existent channel" do
-    conn = conn(:delete, "/channel-does-not-exist")
-
-    conn = Hub.call(conn, @opts)
-
-    assert conn.state == :sent
-    assert conn.status == 404
-    assert conn.resp_body == "Channel not found"
   end
 
   test "read and write a value" do
@@ -84,21 +74,40 @@ defmodule HubTest do
 
   test "delete a pubsub channel" do
     channel_id = UUID.uuid4()
-    conn = conn(:delete, "/pubsub/" <> channel_id)
-    store = Process.whereis(:pubsubstore)
-    Store.put(store, channel_id, "message")
 
+    :ets.insert(:pubsubchannels, {channel_id, "fake pid"})
+
+    Store.get_channel(PubSub, channel_id, :pubsubchannels)
+    conn = conn(:delete, "/pubsub/" <> channel_id)
     conn = Hub.call(conn, @opts)
 
     assert conn.state == :sent
     assert conn.status == 200
     assert conn.resp_body == channel_id <> " deleted"
-    assert Store.get(store, channel_id) == nil
+
+    conn = conn(:delete, "/pubsub/" <> channel_id)
+
+    conn = Hub.call(conn, @opts)
+
+    assert conn.state == :sent
+    assert conn.status == 404
+    assert conn.resp_body == "Channel not found"
   end
 
-  test "delete a non existent pubsub channel" do
+  test "delete a prodcon channel" do
     channel_id = UUID.uuid4()
-    conn = conn(:delete, "/pubsub/" <> channel_id)
+
+    :ets.insert(:prodconchannels, {channel_id, "fake pid"})
+
+    Store.get_channel(PubSub, channel_id, :prodconchannels)
+    conn = conn(:delete, "/" <> channel_id)
+    conn = Hub.call(conn, @opts)
+
+    assert conn.state == :sent
+    assert conn.status == 200
+    assert conn.resp_body == channel_id <> " deleted"
+
+    conn = conn(:delete, "/" <> channel_id)
 
     conn = Hub.call(conn, @opts)
 
