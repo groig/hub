@@ -99,7 +99,7 @@ defmodule HubTest do
 
     :ets.insert(:prodconchannels, {channel_id, "fake pid"})
 
-    Store.get_channel(PubSub, channel_id, :prodconchannels)
+    Store.get_channel(ProduceConsume, channel_id, :prodconchannels)
     conn = conn(:delete, "/" <> channel_id)
     conn = Hub.call(conn, @opts)
 

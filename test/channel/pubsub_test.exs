@@ -1,6 +1,6 @@
 defmodule PubSubTest do
   use ExUnit.Case, async: true
-  alias Channel.{Store, PubSub}
+  alias Channel.PubSub
 
   test "Channel.PubSub.publish/2 publishes a message" do
     msg = "a message"
