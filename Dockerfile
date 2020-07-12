@@ -4,9 +4,9 @@ ENV MIX_ENV=prod
 
 WORKDIR /app
 
-COPY ./mix.exs /app
-COPY ./mix.lock /app
-COPY ./lib /app/lib
+COPY mix.exs /app/
+COPY mix.lock /app/
+COPY lib /app/lib
 
 RUN mix local.hex --force && \
     mix local.rebar --force && \
