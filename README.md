@@ -1,4 +1,4 @@
-![Testing](https://github.com/groig/hub/workflows/Testing/badge.svg)
+![Testing](https://github.com/groig/hub/workflows/CI/badge.svg)
 
 # Hub
 
